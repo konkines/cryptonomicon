@@ -135,7 +135,7 @@ export default {
 
   data() {
     return {
-      ticker: "default",
+      ticker: "",
       tickers: [],
       sel: null,
       graph: [],
@@ -180,5 +180,3 @@ export default {
   },
 };
 </script>
-
-<style src="./app.css"></style>
