@@ -12,12 +12,24 @@
               <input
                 v-model="ticker"
                 @keydown.enter="add"
+                @change="onChange()"
                 type="text"
                 name="wallet"
                 id="wallet"
                 class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
                 placeholder="Например DOGE"
+                minlength="1"
               />
+              <div v-if="ticker">
+                <li
+                  v-for="(el, idx) in availableTickers"
+                  :key="idx"
+                  :style="{ height: 6 }"
+                  @click="add"
+                >
+                  {{ el }}
+                </li>
+              </div>
             </div>
           </div>
         </div>
@@ -164,10 +176,22 @@ export default {
       graph: [],
 
       page: 1,
+      availableTickers: [],
     };
   },
 
-  created() {
+  async created() {
+    const response = await fetch(
+      `https://min-api.cryptocompare.com/data/all/coinlist?summary=true`
+    );
+    const obj = await response.json();
+    //console.log(obj.Data);
+    Object.keys(obj.Data).forEach((key) => {
+      //console.log(key)
+      this.availableTickers.push(key);
+    });
+    //console.log(this.availableTickers);
+
     const windowData = Object.fromEntries(
       new URL(window.location).searchParams.entries()
     );
@@ -190,7 +214,7 @@ export default {
   },
   computed: {
     startIndex() {
-      return (this.page - 1) * 6;
+      return this.page - 1;
     },
     endIndex() {
       return this.page * 6;
@@ -227,7 +251,7 @@ export default {
     subscribeToUpdates(tickerName) {
       setInterval(async () => {
         const f = await fetch(
-          `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=321fd97eaac62b1319a258cbe5babc4f63800d84de95d752d4ac7d5a03d2164f`
+          `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=84b899adb0fe205a73e103e5dcdd1cab52051f706c5d8f3a369b6b4f65cbeeb1`
         );
         const data = await f.json();
         this.tickers.find((t) => t.name === tickerName).price =
@@ -235,7 +259,7 @@ export default {
         if (this.selectedTicker?.name === tickerName) {
           this.graph.push(data.USD);
         }
-      }, 5000);
+      }, 10000);
       this.ticker = "";
     },
     add() {
@@ -257,6 +281,11 @@ export default {
 
     select(ticker) {
       this.selectedTicker = ticker;
+    },
+    onChange() {
+      return this.availableTickers.filter((el) =>
+        el.toLowerCase().includes(this.ticker.toLowerCase)
+      );
     },
   },
   watch: {
